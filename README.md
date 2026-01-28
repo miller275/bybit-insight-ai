@@ -60,6 +60,41 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Deployment (important)
+
+### GitHub Pages is **not supported** for server runtimes
+
+GitHub Pages only serves static files. It does **not** run Node.js, API routes, or server-side code. If your app relies on `/app/api`, HTTP-only cookie sessions, Prisma, or any server runtime, **do not deploy to GitHub Pages** or you will see a white screen or failing API calls.
+
+### Recommended production deployment (server runtime required)
+
+Use a platform that supports Node.js server runtimes, such as **Vercel**, **Render**, **Fly.io**, or **Railway**.
+
+General steps for a Next.js App Router full‑stack setup:
+
+1. **Environment variables**
+   - `DATABASE_URL` — Postgres connection string (e.g., Neon/Supabase/Postgres).
+   - Any auth/session secrets required by your app.
+
+2. **Database migrations (Prisma)**
+   - Run: `npx prisma migrate deploy`
+   - Ensure your CI/CD or hosting platform runs this before starting the server.
+
+3. **HTTPS + secure cookies**
+   - Use `secure: true` for cookies in production.
+   - Configure `sameSite` and `httpOnly` for session cookies.
+
+4. **Build + start scripts**
+   - `npm run build`
+   - `npm run start`
+
+5. **Server runtime for API routes**
+   - Ensure API routes run in **Node.js runtime** (not Edge) if you use Node-only APIs like `crypto`.
+
+### Health check endpoint
+
+For server-hosted deployments, expose a simple health endpoint at `/api/health` that returns `200 OK` and basic status JSON. This is commonly used by hosting platforms for health checks.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
