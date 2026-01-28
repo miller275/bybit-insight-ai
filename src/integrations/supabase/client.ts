@@ -4,14 +4,53 @@ import type { Database } from './types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const missingSupabaseEnv = !SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY;
+
+const missingSupabaseError = new Error(
+  'Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY. ' +
+    'Set these environment variables to enable authentication.'
+);
+
+const createMissingSupabaseClient = () => ({
+  auth: {
+    signInWithPassword: async () => ({
+      data: { session: null, user: null },
+      error: missingSupabaseError,
+    }),
+    signUp: async () => ({
+      data: { session: null, user: null },
+      error: missingSupabaseError,
+    }),
+    signOut: async () => ({
+      error: missingSupabaseError,
+    }),
+    getSession: async () => ({
+      data: { session: null },
+      error: missingSupabaseError,
+    }),
+    onAuthStateChange: () => ({
+      data: {
+        subscription: {
+          unsubscribe: () => undefined,
+        },
+      },
+    }),
+  },
+});
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
-});
+if (missingSupabaseEnv) {
+  console.warn(missingSupabaseError.message);
+}
+
+export const supabase = missingSupabaseEnv
+  ? (createMissingSupabaseClient() as ReturnType<typeof createClient<Database>>)
+  : createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        storage: localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    });
